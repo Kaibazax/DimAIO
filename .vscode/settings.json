@@ -1,0 +1,10 @@
+{
+    "C_Cpp.intelliSenseEngineFallback": "enabled",
+    "C_Cpp.files.exclude": {
+        "**/.vscode": true,
+        "**/.vs": true
+    },
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/**"
+    ]
+}

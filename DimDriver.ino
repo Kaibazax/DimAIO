@@ -1,3 +1,5 @@
+#define VERBOSE 1
+#pragma region Tft init
 #include <lvgl.h>
 #include <TFT_eSPI.h>
 #include <XPT2046_Touchscreen.h>
@@ -16,15 +18,6 @@ LV_FONT_DECLARE(lv_font_vn);
 
 /*LVGL draw into this buffer, 1/10 screen size usually works well. The size is in bytes*/
 #define DRAW_BUF_SIZE (TFT_HOR_RES * TFT_VER_RES / 10 * (LV_COLOR_DEPTH / 8))
-
-#if LV_USE_LOG != 0
-void my_print(lv_log_level_t level, const char *buf)
-{
-    LV_UNUSED(level);
-    Serial.println(buf);
-    Serial.flush();
-}
-#endif
 
 /* LVGL calls it when a rendered image needs to copied to the display*/
 void my_disp_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
@@ -64,60 +57,22 @@ void my_touchpad_read(lv_indev_t *indev, lv_indev_data_t *data)
     }
 }
 
-static void event_cb(lv_event_t *e)
-{
-    lv_event_code_t code = lv_event_get_code(e);
-    lv_obj_t *label = (lv_obj_t *)lv_event_get_user_data(e);
-
-    switch (code)
-    {
-    case LV_EVENT_PRESSED:
-        lv_label_set_text(label, "The last button event:\nLV_EVENT_PRESSED");
-        break;
-    case LV_EVENT_CLICKED:
-        lv_label_set_text(label, "The last button event:\nLV_EVENT_CLICKED");
-        break;
-    case LV_EVENT_LONG_PRESSED:
-        lv_label_set_text(label, "The last button event:\nLV_EVENT_LONG_PRESSED");
-        break;
-    case LV_EVENT_LONG_PRESSED_REPEAT:
-        lv_label_set_text(label, "The last button event:\nLV_EVENT_LONG_PRESSED_REPEAT");
-        break;
-    default:
-        break;
-    }
-}
-
-/**
- * Handle multiple events
- */
-void lv_example_event_2(void)
-{
-    lv_obj_t *btn = lv_button_create(lv_screen_active());
-    lv_obj_set_size(btn, 100, 50);
-    lv_obj_center(btn);
-
-    lv_obj_t *btn_label = lv_label_create(btn);
-    lv_label_set_text(btn_label, LV_SYMBOL_OK "\xE1\xBA\xA4n v\xC3\xA0o");
-    lv_obj_center(btn_label);
-
-    lv_obj_t *info_label = lv_label_create(lv_screen_active());
-    lv_label_set_text(info_label, "Nút cuối được ấn là:\nNone");
-
-    lv_obj_add_event_cb(btn, event_cb, LV_EVENT_ALL, info_label);
-}
 lv_indev_t *indev;     // Touchscreen input device
 uint8_t *draw_buf;     // draw_buf is allocated on heap otherwise the static area is too big on ESP32 at compile
 uint32_t lastTick = 0; // Used to track the tick timer
-
+#pragma endregion
+#include "v/MyUI.cpp"
+MyUI myUI = MyUI();
 void setup()
 {
     // Some basic info on the Serial console
-    String LVGL_Arduino = "LVGL demo ";
+
+    String LVGL_Arduino = "LVGL";
     LVGL_Arduino += String('V') + lv_version_major() + "." + lv_version_minor() + "." + lv_version_patch();
+#if VERBOSE
     Serial.begin(115200);
     Serial.println(LVGL_Arduino);
-
+#endif
     // Initialise the touchscreen
     touchscreenSpi.begin(XPT2046_CLK, XPT2046_MISO, XPT2046_MOSI, XPT2046_CS); /* Start second SPI bus for touchscreen */
     touchscreen.begin(touchscreenSpi);                                         /* Touchscreen init */
@@ -132,20 +87,35 @@ void setup()
     indev = lv_indev_create();
     lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
     lv_indev_set_read_cb(indev, my_touchpad_read);
-    lv_theme_t *th = lv_theme_default_init(disp ,                                       /*Use the DPI, size, etc from this display*/
+    lv_theme_t *th = lv_theme_default_init(disp,                                           /*Use the DPI, size, etc from this display*/
                                            lv_color_hex(0x6039a8), lv_color_hex(0x238636), /*Primary and secondary palette*/
-                                           true,                                         /*Light or dark mode*/
-                                           &lv_font_vn);                       /*Small, normal, large fonts*/
+                                           true,                                           /*Light or dark mode*/
+                                           &lv_font_vn);                                   /*Small, normal, large fonts*/
 
     lv_display_set_theme(disp, th);
 
-    lv_example_event_2();
-    // Done
+// Done
+#if VERBOSE
     Serial.println("Setup done");
+#endif
+    myUI.ScreenInit();
 }
 
 void loop()
 {
+    if (Serial.available())
+    {
+        byte buff[8];
+        Serial.readBytes(buff, 8);
+        myUI.AcFrequency = (float)buff[0];
+        myUI.onTime1 = buff[2];
+        myUI.offTime1 = buff[1];
+        myUI.onTime2 = buff[4];
+        myUI.offTime2 = buff[3];
+        myUI.IsChanged = true;
+        // lv_obj_invalidate(lv_screen_active());
+    }
+    myUI.ScreenHandle();
     lv_tick_inc(millis() - lastTick); // Update the tick timer. Tick is new for LVGL 9
     lastTick = millis();
     lv_timer_handler(); // Update the UI

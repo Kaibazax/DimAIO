@@ -10,6 +10,7 @@ public:
     float AcFrequency = 55.5f;
     int32_t offTime1 = 15;
     int32_t onTime1 = 30;
+    int32_t offHard = 45;
     int32_t offTime2 = 45;
     int32_t onTime2 = 60;
     bool IsChanged = true;

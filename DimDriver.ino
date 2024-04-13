@@ -3,6 +3,7 @@
 #include <lvgl.h>
 #include <TFT_eSPI.h>
 #include <XPT2046_Touchscreen.h>
+#include <memory>
 #define XPT2046_IRQ 36
 #define XPT2046_MOSI 32
 #define XPT2046_MISO 39
@@ -61,8 +62,9 @@ lv_indev_t *indev;     // Touchscreen input device
 uint8_t *draw_buf;     // draw_buf is allocated on heap otherwise the static area is too big on ESP32 at compile
 uint32_t lastTick = 0; // Used to track the tick timer
 #pragma endregion
-#include "v/MyUI.cpp"
-MyUI myUI = MyUI();
+#include "v/AcChart.cpp"
+// #include "v/ZScreen.h"
+std::shared_ptr<v::ZScreen> myUI;
 void setup()
 {
     // Some basic info on the Serial console
@@ -98,7 +100,8 @@ void setup()
 #if VERBOSE
     Serial.println("Setup done");
 #endif
-    myUI.ScreenInit();
+    myUI = std::make_shared<v::AcChart>();
+    myUI->init();
 }
 
 void loop()
@@ -107,15 +110,15 @@ void loop()
     {
         byte buff[8];
         Serial.readBytes(buff, 8);
-        myUI.AcFrequency = (float)buff[0];
-        myUI.onTime1 = buff[2];
-        myUI.offTime1 = buff[1];
-        myUI.onTime2 = buff[4];
-        myUI.offTime2 = buff[3];
-        myUI.IsChanged = true;
+        AppMem(AcFrequency) = (float)buff[0];
+        AppMem(onP1) = buff[2];
+        AppMem(delayP1) = buff[1];
+        AppMem(onTime2) = buff[4];
+        AppMem(offTime2) = buff[3];
+        myUI->IsChanged = true;
         // lv_obj_invalidate(lv_screen_active());
     }
-    myUI.ScreenHandle();
+    myUI->refresh();
     lv_tick_inc(millis() - lastTick); // Update the tick timer. Tick is new for LVGL 9
     lastTick = millis();
     lv_timer_handler(); // Update the UI

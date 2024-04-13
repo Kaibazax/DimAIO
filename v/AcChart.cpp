@@ -1,12 +1,13 @@
-#include "MyUI.h"
+#include "AcChart.h"
 #define ON_TIME_1 0
 #define OFF_TIME_1 1
 #define OFF_HARD 2
 #define ON_TIME_2 3
 #define OFF_TIME_2 4
-MyUI::MyUI()
+using namespace v;
+AcChart::~AcChart()
 {
-    return;
+    Serial.printf("Decontruc AcChart");
 };
 static const char *btnm_map[] = {LV_SYMBOL_LEFT, LV_SYMBOL_PLUS, LV_SYMBOL_MINUS, LV_SYMBOL_RIGHT, ""};
 lv_obj_t *btnm1;
@@ -23,7 +24,7 @@ lv_obj_t *lbl_offT1;
 lv_obj_t *lbl_offT2;
 
 lv_group_t *g;
-MyUI *_this;
+AcChart *_this;
 int8_t selectedRange = 0;
 void event_handler(lv_event_t *e)
 {
@@ -91,7 +92,7 @@ void event_cb(lv_event_t *e)
         *var = lv_spinbox_get_value(obj);
         _this->dInt2mInt();
         _this->IsChanged = true;
-        Serial.printf("changed %d %d\n", _this->IsChanged, _this->offTime1);
+        Serial.printf("changed %d %d\n", _this->IsChanged, ZScreen::App.delayP1);
     }
     if (code == LV_EVENT_FOCUSED)
     {
@@ -114,7 +115,7 @@ void default_spinbox(lv_obj_t *spinbox, int32_t *value)
     lv_obj_add_event_cb(spinbox, event_cb, LV_EVENT_ALL, value);
     // lv_obj_get_style_bg_color
 };
-void MyUI::ScreenInit()
+void AcChart::init()
 {
     _this = this;
     dInt2mInt();
@@ -181,18 +182,18 @@ void MyUI::ScreenInit()
     lv_obj_set_grid_cell(lbl, LV_GRID_ALIGN_STRETCH, 1, 1, LV_GRID_ALIGN_STRETCH, 2, 1); // Grid layout
     lv_label_set_text(lbl, "Delay:");
     lv_obj_t *spinbox = lv_spinbox_create(cont);
-    default_spinbox(spinbox, &dDlT1);
+    default_spinbox(spinbox, &ZScreen::App.dDlT1);
     lv_group_add_obj(g, spinbox);
     lv_obj_set_grid_cell(spinbox, LV_GRID_ALIGN_STRETCH, 2, 2, LV_GRID_ALIGN_STRETCH, 2, 1); // Grid layout
     // lbl_offT1 = lv_label_create(spinbox);
-    // lv_obj_add_event_cb(btn, event_cb, LV_EVENT_ALL, &offTime1);
+    // lv_obj_add_event_cb(btn, event_cb, LV_EVENT_ALL, &delayP1);
     // lv_obj_center(lbl_offT1);
 
     lbl = lv_label_create(cont);
     lv_obj_set_grid_cell(lbl, LV_GRID_ALIGN_STRETCH, 4, 1, LV_GRID_ALIGN_STRETCH, 2, 1); // Grid layout
     lv_label_set_text(lbl, "On:");
     spinbox = lv_spinbox_create(cont);
-    default_spinbox(spinbox, &dOnT1);
+    default_spinbox(spinbox, &ZScreen::App.dOnT1);
     lv_group_add_obj(g, spinbox);
     lv_obj_set_grid_cell(spinbox, LV_GRID_ALIGN_STRETCH, 5, 2, LV_GRID_ALIGN_STRETCH, 2, 1); // Grid layout
 
@@ -200,7 +201,7 @@ void MyUI::ScreenInit()
     lv_obj_set_grid_cell(lbl, LV_GRID_ALIGN_STRETCH, 0, 3, LV_GRID_ALIGN_STRETCH, 3, 1); // Grid layout
     lv_label_set_text(lbl, "Khoản cách 2 xung:");
     spinbox = lv_spinbox_create(cont);
-    default_spinbox(spinbox, &dOffH);
+    default_spinbox(spinbox, &ZScreen::App.dOffH);
     lv_group_add_obj(g, spinbox);
     lv_obj_set_grid_cell(spinbox, LV_GRID_ALIGN_STRETCH, 3, 2, LV_GRID_ALIGN_STRETCH, 3, 1); // Grid layout
 
@@ -211,7 +212,7 @@ void MyUI::ScreenInit()
     lv_obj_set_grid_cell(lbl, LV_GRID_ALIGN_STRETCH, 1, 1, LV_GRID_ALIGN_STRETCH, 4, 1); // Grid layout
     lv_label_set_text(lbl, "Delay:");
     spinbox = lv_spinbox_create(cont);
-    default_spinbox(spinbox, &dDlT2);
+    default_spinbox(spinbox, &ZScreen::App.dDlT2);
     lv_group_add_obj(g, spinbox);
     lv_obj_set_grid_cell(spinbox, LV_GRID_ALIGN_STRETCH, 2, 2, LV_GRID_ALIGN_STRETCH, 4, 1); // Grid layout
 
@@ -219,7 +220,7 @@ void MyUI::ScreenInit()
     lv_obj_set_grid_cell(lbl, LV_GRID_ALIGN_STRETCH, 4, 1, LV_GRID_ALIGN_STRETCH, 4, 1); // Grid layout
     lv_label_set_text(lbl, "On:");
     spinbox = lv_spinbox_create(cont);
-    default_spinbox(spinbox, &dOnT2);
+    default_spinbox(spinbox, &ZScreen::App.dOnT2);
     lv_group_add_obj(g, spinbox);
     lv_obj_set_grid_cell(spinbox, LV_GRID_ALIGN_STRETCH, 5, 2, LV_GRID_ALIGN_STRETCH, 4, 1); // Grid layout
 #pragma endregion
@@ -233,7 +234,7 @@ void MyUI::ScreenInit()
     lv_color_t c = lv_obj_get_style_bg_color(spinbox, LV_PART_MAIN);
     lv_obj_add_event_cb(btnm1, event_handler, LV_EVENT_ALL, NULL);
 };
-void MyUI::ScreenHandle()
+void AcChart::refresh()
 {
     if (!IsChanged)
         return;
@@ -249,42 +250,42 @@ void MyUI::ScreenHandle()
     {
     case 4:
         lv_chart_set_next_value2(chart, FocusRange, 0, 0);
-        lv_chart_set_next_value2(chart, FocusRange, offTime1 / 10, 0);
+        lv_chart_set_next_value2(chart, FocusRange, ZScreen::App.delayP1 / 10, 0);
         break;
     case 8:
-        lv_chart_set_next_value2(chart, FocusRange, onTime1 / 10, 0);
-        lv_chart_set_next_value2(chart, FocusRange, offHard / 10, 0);
+        lv_chart_set_next_value2(chart, FocusRange, ZScreen::App.onP1 / 10, 0);
+        lv_chart_set_next_value2(chart, FocusRange, ZScreen::App.space2P / 10, 0);
         break;
     case 11:
-        lv_chart_set_next_value2(chart, FocusRange, offHard / 10, 0);
-        lv_chart_set_next_value2(chart, FocusRange, offTime2 / 10, 0);
+        lv_chart_set_next_value2(chart, FocusRange, ZScreen::App.space2P / 10, 0);
+        lv_chart_set_next_value2(chart, FocusRange, ZScreen::App.offTime2 / 10, 0);
         break;
     }
-    lv_chart_set_next_value2(chart, P1Vac, offTime1 / 10, 0);
-    lv_chart_set_next_value2(chart, P2Vac, offTime2 / 10, 0);
+    lv_chart_set_next_value2(chart, P1Vac, ZScreen::App.delayP1 / 10, 0);
+    lv_chart_set_next_value2(chart, P2Vac, ZScreen::App.offTime2 / 10, 0);
     for (int16_t i = 0; i < 200; i++)
     {
-        double d = 220 * sin(2.0 * PI * i * AcFrequency / 1000);
-        if ((i * 1 > offTime1 / 10) && (i * 1 < onTime1 / 10))
+        double d = 220 * sin(2.0 * PI * i * ZScreen::App.AcFrequency / 1000);
+        if ((i * 1 > ZScreen::App.delayP1 / 10) && (i * 1 < ZScreen::App.onP1 / 10))
             lv_chart_set_next_value2(chart, P1Vac, i, d);
-        else if ((i * 1 > offTime2 / 10) && (i * 1 < onTime2 / 10))
+        else if ((i * 1 > ZScreen::App.offTime2 / 10) && (i * 1 < ZScreen::App.onTime2 / 10))
             lv_chart_set_next_value2(chart, P2Vac, i, d);
         lv_chart_set_next_value2(chart, InVac, i, d);
         /*Directly set points on 'ser2'*/
         // ser2->y_points[i] = lv_rand(50, 90);
     }
-    lv_chart_set_next_value2(chart, P1Vac, onTime1 / 10, 0);
-    lv_chart_set_next_value2(chart, P2Vac, onTime2 / 10, 0);
+    lv_chart_set_next_value2(chart, P1Vac, ZScreen::App.onP1 / 10, 0);
+    lv_chart_set_next_value2(chart, P2Vac, ZScreen::App.onTime2 / 10, 0);
     char str[20];
-    sprintf(str, "%2.1fHz T=%2.1fms", AcFrequency, 1000 / AcFrequency);
+    sprintf(str, "%2.1fHz T=%2.1fms", ZScreen::App.AcFrequency, 1000 / AppMem(AcFrequency));
     lv_label_set_text(lbl_Fr, str);
 
-    // sprintf(str, "%d", offTime1);
+    // sprintf(str, "%d", delayP1);
     // lv_label_set_text(lbl_offT1, str);
-    // sprintf(str, "%d", onTime1);
+    // sprintf(str, "%d", onP1);
     // lv_label_set_text(lbl_onT1, str);
 
-    // sprintf(str, "%d", offHard);
+    // sprintf(str, "%d", space2P);
     // lv_label_set_text(lbl_offHard, str);
 
     // sprintf(str, "%d", onTime2);
@@ -293,27 +294,27 @@ void MyUI::ScreenHandle()
     // lv_label_set_text(lbl_offT2, str);
     IsChanged = false;
 };
-void MyUI::mInt2dInt()
+void AcChart::mInt2dInt()
 {
-    dDlT1 = offTime1;
-    dOnT1 = onTime1 - offTime1;
-    dOffH = offHard - onTime1;
-    dDlT2 = offTime2 - offHard;
-    dOnT2 = onTime2 - offTime2;
+    AppMem(dDlT1) = AppMem(delayP1);
+    AppMem(dOnT1) = AppMem(onP1) - AppMem(delayP1);
+    AppMem(dOffH) = AppMem(space2P) - AppMem(onP1);
+    AppMem(dDlT2) = AppMem(offTime2) - AppMem(space2P);
+    AppMem(dOnT2) = AppMem(onTime2) - AppMem(offTime2);
 };
-void MyUI::dInt2mInt()
+void AcChart::dInt2mInt()
 {
-    int32_t sum = dDlT1;
-    offTime1 = sum;
-    sum += dOnT1;
-    onTime1 = sum;
-    sum += dOffH;
-    double d = sum * AcFrequency / 10000;
+    int32_t sum = AppMem(dDlT1);
+    AppMem(delayP1) = sum;
+    sum += AppMem(dOnT1);
+    AppMem(onP1) = sum;
+    sum += AppMem(dOffH);
+    double d = sum * AppMem(AcFrequency) / 10000;
     int32_t i = (int32_t)d + 1;
-    sum = i / AcFrequency * 10000;
-    offHard = sum;
-    sum += dDlT2;
-    offTime2 = sum;
-    sum += dOnT2;
-    onTime2 = sum;
+    sum = i / AppMem(AcFrequency) * 10000;
+    AppMem(space2P) = sum;
+    sum += AppMem(dDlT2);
+    AppMem(offTime2) = sum;
+    sum += AppMem(dOnT2);
+    AppMem(onTime2) = sum;
 }

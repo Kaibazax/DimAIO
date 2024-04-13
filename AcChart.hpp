@@ -1,9 +1,9 @@
-#ifndef MyUI_H
-#define MyUI_H
-#include "ZScreen.cpp"
+#ifndef AcChart_H
+#define AcChart_H
+#include "MyUI.hpp"
 namespace v
 {
-    class AcChart : public ZScreen
+    class AcChart : public MyUI
     {
     public:
         ~AcChart();

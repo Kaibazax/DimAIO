@@ -1,4 +1,4 @@
-#include "AcChart.h"
+#include "AcChart.hpp"
 #define ON_TIME_1 0
 #define OFF_TIME_1 1
 #define OFF_HARD 2
@@ -9,6 +9,13 @@ AcChart::~AcChart()
 {
     Serial.printf("Decontruc AcChart");
 };
+void setAllPad(lv_obj_t *obj, int32_t i)
+{
+    lv_obj_set_style_pad_left(obj, 0, 0);
+    lv_obj_set_style_pad_right(obj, 0, 0);
+    lv_obj_set_style_pad_top(obj, 0, 0);
+    lv_obj_set_style_pad_bottom(obj, 0, 0);
+}
 static const char *btnm_map[] = {LV_SYMBOL_LEFT, LV_SYMBOL_PLUS, LV_SYMBOL_MINUS, LV_SYMBOL_RIGHT, ""};
 lv_obj_t *btnm1;
 lv_obj_t *chart;
@@ -75,13 +82,6 @@ void event_handler(lv_event_t *e)
         }
     }
 }
-void setAllPad(lv_obj_t *obj, int32_t i)
-{
-    lv_obj_set_style_pad_left(obj, 0, 0);
-    lv_obj_set_style_pad_right(obj, 0, 0);
-    lv_obj_set_style_pad_top(obj, 0, 0);
-    lv_obj_set_style_pad_bottom(obj, 0, 0);
-}
 void event_cb(lv_event_t *e)
 {
     lv_event_code_t code = lv_event_get_code(e);
@@ -92,7 +92,7 @@ void event_cb(lv_event_t *e)
         *var = lv_spinbox_get_value(obj);
         _this->dInt2mInt();
         _this->IsChanged = true;
-        Serial.printf("changed %d %d\n", _this->IsChanged, ZScreen::App.delayP1);
+        Serial.printf("changed %d %d\n", _this->IsChanged, MyUI::App.delayP1);
     }
     if (code == LV_EVENT_FOCUSED)
     {
@@ -117,9 +117,10 @@ void default_spinbox(lv_obj_t *spinbox, int32_t *value)
 };
 void AcChart::init()
 {
+    lv_obj_clean(lv_screen_active());
     _this = this;
     dInt2mInt();
-    lv_obj_clean(lv_screen_active());
+    // lv_obj_clean(lv_screen_active());
     static int32_t col_dsc[] = {60, 50, 40, 40, 50, 40, 40, LV_GRID_TEMPLATE_LAST}; // 320-90
     static int32_t row_dsc[] = {20, 100, 20, 20, 20, 60, LV_GRID_TEMPLATE_LAST};    // 240
 #pragma region Layout
@@ -182,7 +183,7 @@ void AcChart::init()
     lv_obj_set_grid_cell(lbl, LV_GRID_ALIGN_STRETCH, 1, 1, LV_GRID_ALIGN_STRETCH, 2, 1); // Grid layout
     lv_label_set_text(lbl, "Delay:");
     lv_obj_t *spinbox = lv_spinbox_create(cont);
-    default_spinbox(spinbox, &ZScreen::App.dDlT1);
+    default_spinbox(spinbox, &MyUI::App.dDlT1);
     lv_group_add_obj(g, spinbox);
     lv_obj_set_grid_cell(spinbox, LV_GRID_ALIGN_STRETCH, 2, 2, LV_GRID_ALIGN_STRETCH, 2, 1); // Grid layout
     // lbl_offT1 = lv_label_create(spinbox);
@@ -193,7 +194,7 @@ void AcChart::init()
     lv_obj_set_grid_cell(lbl, LV_GRID_ALIGN_STRETCH, 4, 1, LV_GRID_ALIGN_STRETCH, 2, 1); // Grid layout
     lv_label_set_text(lbl, "On:");
     spinbox = lv_spinbox_create(cont);
-    default_spinbox(spinbox, &ZScreen::App.dOnT1);
+    default_spinbox(spinbox, &MyUI::App.dOnT1);
     lv_group_add_obj(g, spinbox);
     lv_obj_set_grid_cell(spinbox, LV_GRID_ALIGN_STRETCH, 5, 2, LV_GRID_ALIGN_STRETCH, 2, 1); // Grid layout
 
@@ -201,7 +202,7 @@ void AcChart::init()
     lv_obj_set_grid_cell(lbl, LV_GRID_ALIGN_STRETCH, 0, 3, LV_GRID_ALIGN_STRETCH, 3, 1); // Grid layout
     lv_label_set_text(lbl, "Khoản cách 2 xung:");
     spinbox = lv_spinbox_create(cont);
-    default_spinbox(spinbox, &ZScreen::App.dOffH);
+    default_spinbox(spinbox, &MyUI::App.dOffH);
     lv_group_add_obj(g, spinbox);
     lv_obj_set_grid_cell(spinbox, LV_GRID_ALIGN_STRETCH, 3, 2, LV_GRID_ALIGN_STRETCH, 3, 1); // Grid layout
 
@@ -212,7 +213,7 @@ void AcChart::init()
     lv_obj_set_grid_cell(lbl, LV_GRID_ALIGN_STRETCH, 1, 1, LV_GRID_ALIGN_STRETCH, 4, 1); // Grid layout
     lv_label_set_text(lbl, "Delay:");
     spinbox = lv_spinbox_create(cont);
-    default_spinbox(spinbox, &ZScreen::App.dDlT2);
+    default_spinbox(spinbox, &MyUI::App.dDlT2);
     lv_group_add_obj(g, spinbox);
     lv_obj_set_grid_cell(spinbox, LV_GRID_ALIGN_STRETCH, 2, 2, LV_GRID_ALIGN_STRETCH, 4, 1); // Grid layout
 
@@ -220,7 +221,7 @@ void AcChart::init()
     lv_obj_set_grid_cell(lbl, LV_GRID_ALIGN_STRETCH, 4, 1, LV_GRID_ALIGN_STRETCH, 4, 1); // Grid layout
     lv_label_set_text(lbl, "On:");
     spinbox = lv_spinbox_create(cont);
-    default_spinbox(spinbox, &ZScreen::App.dOnT2);
+    default_spinbox(spinbox, &MyUI::App.dOnT2);
     lv_group_add_obj(g, spinbox);
     lv_obj_set_grid_cell(spinbox, LV_GRID_ALIGN_STRETCH, 5, 2, LV_GRID_ALIGN_STRETCH, 4, 1); // Grid layout
 #pragma endregion
@@ -233,6 +234,8 @@ void AcChart::init()
     setAllPad(btnm1, 2);
     lv_color_t c = lv_obj_get_style_bg_color(spinbox, LV_PART_MAIN);
     lv_obj_add_event_cb(btnm1, event_handler, LV_EVENT_ALL, NULL);
+
+    menuInit();
 };
 void AcChart::refresh()
 {
@@ -250,34 +253,34 @@ void AcChart::refresh()
     {
     case 4:
         lv_chart_set_next_value2(chart, FocusRange, 0, 0);
-        lv_chart_set_next_value2(chart, FocusRange, ZScreen::App.delayP1 / 10, 0);
+        lv_chart_set_next_value2(chart, FocusRange, MyUI::App.delayP1 / 10, 0);
         break;
     case 8:
-        lv_chart_set_next_value2(chart, FocusRange, ZScreen::App.onP1 / 10, 0);
-        lv_chart_set_next_value2(chart, FocusRange, ZScreen::App.space2P / 10, 0);
+        lv_chart_set_next_value2(chart, FocusRange, MyUI::App.onP1 / 10, 0);
+        lv_chart_set_next_value2(chart, FocusRange, MyUI::App.space2P / 10, 0);
         break;
     case 11:
-        lv_chart_set_next_value2(chart, FocusRange, ZScreen::App.space2P / 10, 0);
-        lv_chart_set_next_value2(chart, FocusRange, ZScreen::App.offTime2 / 10, 0);
+        lv_chart_set_next_value2(chart, FocusRange, MyUI::App.space2P / 10, 0);
+        lv_chart_set_next_value2(chart, FocusRange, MyUI::App.offTime2 / 10, 0);
         break;
     }
-    lv_chart_set_next_value2(chart, P1Vac, ZScreen::App.delayP1 / 10, 0);
-    lv_chart_set_next_value2(chart, P2Vac, ZScreen::App.offTime2 / 10, 0);
+    lv_chart_set_next_value2(chart, P1Vac, MyUI::App.delayP1 / 10, 0);
+    lv_chart_set_next_value2(chart, P2Vac, MyUI::App.offTime2 / 10, 0);
     for (int16_t i = 0; i < 200; i++)
     {
-        double d = 220 * sin(2.0 * PI * i * ZScreen::App.AcFrequency / 1000);
-        if ((i * 1 > ZScreen::App.delayP1 / 10) && (i * 1 < ZScreen::App.onP1 / 10))
+        double d = 220 * sin(2.0 * PI * i * MyUI::App.AcFrequency / 1000);
+        if ((i * 1 > MyUI::App.delayP1 / 10) && (i * 1 < MyUI::App.onP1 / 10))
             lv_chart_set_next_value2(chart, P1Vac, i, d);
-        else if ((i * 1 > ZScreen::App.offTime2 / 10) && (i * 1 < ZScreen::App.onTime2 / 10))
+        else if ((i * 1 > MyUI::App.offTime2 / 10) && (i * 1 < MyUI::App.onTime2 / 10))
             lv_chart_set_next_value2(chart, P2Vac, i, d);
         lv_chart_set_next_value2(chart, InVac, i, d);
         /*Directly set points on 'ser2'*/
         // ser2->y_points[i] = lv_rand(50, 90);
     }
-    lv_chart_set_next_value2(chart, P1Vac, ZScreen::App.onP1 / 10, 0);
-    lv_chart_set_next_value2(chart, P2Vac, ZScreen::App.onTime2 / 10, 0);
+    lv_chart_set_next_value2(chart, P1Vac, MyUI::App.onP1 / 10, 0);
+    lv_chart_set_next_value2(chart, P2Vac, MyUI::App.onTime2 / 10, 0);
     char str[20];
-    sprintf(str, "%2.1fHz T=%2.1fms", ZScreen::App.AcFrequency, 1000 / AppMem(AcFrequency));
+    sprintf(str, "%2.1fHz T=%2.1fms", MyUI::App.AcFrequency, 1000 / AppMem(AcFrequency));
     lv_label_set_text(lbl_Fr, str);
 
     // sprintf(str, "%d", delayP1);

@@ -1,5 +1,8 @@
 #define VERBOSE 1
 #pragma region Tft init
+#include "MyUI.hpp"
+#include "AcChart.hpp"
+#include "Home.hpp"
 #include <lvgl.h>
 #include <TFT_eSPI.h>
 #include <XPT2046_Touchscreen.h>
@@ -62,9 +65,9 @@ lv_indev_t *indev;     // Touchscreen input device
 uint8_t *draw_buf;     // draw_buf is allocated on heap otherwise the static area is too big on ESP32 at compile
 uint32_t lastTick = 0; // Used to track the tick timer
 #pragma endregion
-#include "v/AcChart.cpp"
-// #include "v/ZScreen.h"
-std::shared_ptr<v::ZScreen> myUI;
+// #include "v/Home.cpp"
+// #include "v/MyUI.h"
+
 void setup()
 {
     // Some basic info on the Serial console
@@ -100,8 +103,8 @@ void setup()
 #if VERBOSE
     Serial.println("Setup done");
 #endif
-    myUI = std::make_shared<v::AcChart>();
-    myUI->init();
+    v::MyUI::myUI = std::make_shared<v::AcChart>();
+    v::MyUI::myUI->init();
 }
 
 void loop()
@@ -115,10 +118,10 @@ void loop()
         AppMem(delayP1) = buff[1];
         AppMem(onTime2) = buff[4];
         AppMem(offTime2) = buff[3];
-        myUI->IsChanged = true;
+        v::MyUI::myUI->IsChanged = true;
         // lv_obj_invalidate(lv_screen_active());
     }
-    myUI->refresh();
+    v::MyUI::myUI->refresh();
     lv_tick_inc(millis() - lastTick); // Update the tick timer. Tick is new for LVGL 9
     lastTick = millis();
     lv_timer_handler(); // Update the UI

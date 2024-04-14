@@ -5,10 +5,23 @@
         "**/.vs": true
     },
     "C_Cpp.default.includePath": [
-        "${workspaceFolder}/**"
+        "${workspaceFolder}/**",
+        "${workspaceFolder}/**/*.cpp",
+        "${workspaceFolder}/*.cpp"
     ],
     "files.associations": {
         "*.ino": "cpp",
-        "thread": "cpp"
-    }
+        "thread": "cpp",
+        "*.tcc": "cpp"
+    },
+    "C_Cpp.default.cppStandard": "c++23",
+    "C_Cpp.default.cStandard": "c23",
+    "arduino.logLevel": "info",
+    "idf.flashType": "UART",
+    "idf.portWin": "COM4",
+    "idf.adapterTargetName": "esp32",
+    "idf.openOcdConfigs": [
+        "interface/ftdi/esp32_devkitj_v1.cfg",
+        "target/esp32.cfg"
+    ]
 }

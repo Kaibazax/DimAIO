@@ -18,6 +18,7 @@ namespace v
     struct AppMem : FlashMem
     {
         float AcFrequency = 60.0f;
+        float Ac_ms = 16.7f;
     };
 }
 #endif

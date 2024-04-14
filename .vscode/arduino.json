@@ -4,5 +4,6 @@
     "sketch": "DimDriver.ino",
     "programmer": "esptool",
     "port": "COM4",
-    "output": "../SDimAIObuild"
+    "output": "../SDimAIObuild",
+    "intelliSenseGen": "enable"
 }

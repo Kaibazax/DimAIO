@@ -1,8 +1,8 @@
 #define VERBOSE 1
 #pragma region Tft init
-#include "MyUI.hpp"
-#include "AcChart.hpp"
-#include "Home.hpp"
+#include "v_MyUI.hpp"
+#include "v_AcChart.hpp"
+#include "v_Home.hpp"
 #include <lvgl.h>
 #include <TFT_eSPI.h>
 #include <XPT2046_Touchscreen.h>
@@ -67,11 +67,57 @@ uint32_t lastTick = 0; // Used to track the tick timer
 #pragma endregion
 // #include "v/Home.cpp"
 // #include "v/MyUI.h"
+uint32_t last_usTick = 0;
+bool lastI = true;
+uint32_t last_render = 0;
+void taskHW(void *parameter)
+{
+    Serial.printf("task HW core:%d\n", xPortGetCoreID());
+    delay(1000);
+    last_usTick = micros();
+    delayMicroseconds(50);
+    for (;;)
+    {
+        uint32_t usTick = micros();
+        if (last_usTick < usTick && !v::MyUI::myUI->IsChanged)
+        {
+            float acms = AppMem(Ac_ms);
+            float acf = AppMem(AcFrequency);
+            acms *= 0.9f;
+            acms += (usTick - last_usTick) / 10000;
+            // acms /= 10;
+            if (acms > 1)
+            {
+                acf = 1000.0f / acms;
+                AppMem(Ac_ms) = acms;
+                // Serial.printf("AcF Update:%2.2fms %2.2fHz %dus\n", acms, acf, usTick);
 
+                if (acf > 1 && acf < 200 && acms < 1000)
+                {
+                    //
+                    AppMem(AcFrequency) = acf;
+                    if (usTick - last_render > 500000)
+                    {
+                        v::MyUI::myUI->IsChanged = true;
+                        last_render = usTick;
+                    }
+                }
+            }
+        }
+        if (digitalRead(0) != lastI || last_usTick > usTick)
+        {
+            last_usTick = usTick;
+            lastI = digitalRead(0);
+        }
+        delayMicroseconds(47);
+    }
+}
+TaskHandle_t TaskHWHandle;
+lv_display_t *disp;
 void setup()
 {
     // Some basic info on the Serial console
-
+    pinMode(0, INPUT_PULLDOWN);
     String LVGL_Arduino = "LVGL";
     LVGL_Arduino += String('V') + lv_version_major() + "." + lv_version_minor() + "." + lv_version_patch();
 #if VERBOSE
@@ -86,7 +132,6 @@ void setup()
     // Initialise LVGL
     lv_init();
     draw_buf = new uint8_t[DRAW_BUF_SIZE];
-    lv_display_t *disp;
     disp = lv_tft_espi_create(TFT_HOR_RES, TFT_VER_RES, draw_buf, DRAW_BUF_SIZE);
     // Initialize the XPT2046 input device driver
     indev = lv_indev_create();
@@ -105,6 +150,14 @@ void setup()
 #endif
     v::MyUI::myUI = std::make_shared<v::AcChart>();
     v::MyUI::myUI->init();
+    xTaskCreatePinnedToCore(
+        taskHW,        /* Function to implement the task */
+        "Task1",       /* Name of the task */
+        10000,         /* Stack size in words */
+        NULL,          /* Task input parameter */
+        0,             /* Priority of the task */
+        &TaskHWHandle, /* Task handle. */
+        0);            /* Core where the task should run */
 }
 
 void loop()
@@ -120,10 +173,18 @@ void loop()
         AppMem(offTime2) = buff[3];
         v::MyUI::myUI->IsChanged = true;
         // lv_obj_invalidate(lv_screen_active());
+        Serial.printf("Main loop core:%d\n", xPortGetCoreID());
     }
-    v::MyUI::myUI->refresh();
+    lv_disp_enable_invalidation(disp, !v::MyUI::myUI->IsChanged);
+    if (v::MyUI::myUI->IsChanged)
+    {
+        // lv_disp_enable_invalidation(disp, false);
+        v::MyUI::myUI->refresh();
+        // lv_disp_enable_invalidation(disp, true);
+    }
+    else
+        lv_timer_handler();           // Update the UI
     lv_tick_inc(millis() - lastTick); // Update the tick timer. Tick is new for LVGL 9
     lastTick = millis();
-    lv_timer_handler(); // Update the UI
     delay(5);
 }

@@ -1,4 +1,4 @@
-#include "AcChart.hpp"
+#include "v_AcChart.hpp"
 #define ON_TIME_1 0
 #define OFF_TIME_1 1
 #define OFF_HARD 2
@@ -43,7 +43,7 @@ void event_handler(lv_event_t *e)
         uint32_t id = lv_buttonmatrix_get_selected_button(obj);
         sb = lv_group_get_focused(g);
         int32_t step = lv_spinbox_get_step(sb);
-        Serial.printf("Step:%d", step);
+        Serial.printf("Step:%d\n", step);
         switch (id)
         {
         case 0:
@@ -239,8 +239,6 @@ void AcChart::init()
 };
 void AcChart::refresh()
 {
-    if (!IsChanged)
-        return;
     lv_chart_remove_series(chart, FocusRange);
     lv_chart_remove_series(chart, P1Vac);
     lv_chart_remove_series(chart, P2Vac);
